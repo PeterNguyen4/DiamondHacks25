@@ -1,18 +1,47 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors'); // Import the CORS middleware
+const cors = require('cors');
+const connectDB = require('./db'); // Import the database connection
+// Connect to MongoDB
+const Product = require('./model/product')
+connectDB();
 
 const app = express();
 const PORT = 3001;
 
-// Enable CORS for all routes
 app.use(cors());
-
-// Middleware to parse JSON
 app.use(express.json());
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
+});
+
+// Receive modified nutrition facts and save to database
+app.post('/api/product', async (req, res) => {
+    try {
+        const productData = req.body; // Get JSON object from request body
+        if (!productData) {
+            return res.status(400).json({ error: 'Invalid product data' });
+        }
+        const product = new Product(productData);
+        const result = await product.save(); // Save to MongoDB
+        res.status(201).json({ message: 'Product saved successfully', id: result._id });
+    } catch (error) {
+        console.error('Error saving product to database:', error.message);
+        res.status(500).json({ error: 'Failed to save product to database' });
+    }
+});
+
+// Retrieve all products from the database
+app.get('/api/products', async (req, res) => {
+    try {
+        console.log('get all endpoint')
+        const products = await Product.find({}); // Fetch all products
+        res.status(200).json(products);
+    } catch (error) {
+        console.error('Error getting data:', error.message);
+        res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
+    }
 });
 
 app.get('/api/:productID', async (req, res) => {
