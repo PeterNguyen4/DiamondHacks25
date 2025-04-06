@@ -25,6 +25,7 @@ export default function Layout() {
         tabBarStyle: { 
             backgroundColor: '#fff', 
             borderTopWidth: 0, 
+            height: 100,
             ...Platform.select({
                 ios: {
                     shadowColor: '#C6C6C6',
@@ -36,6 +37,9 @@ export default function Layout() {
                     elevation: 5, // For Android
                 },
                 }),
+        },
+        tabBarItemStyle: {
+            padding: 10
         },
     }}>
         <Tabs.Screen name="home" options={{ 
