@@ -53,6 +53,7 @@ app.get('/api/summary', async (req, res) => {
             }
         }); // Fetch the names and serving sizes of all products
 
+        // Join serving quantity and unit into a single string
         const productNamesAndServingSizes = products.map(product => ({
             name: product.product.product_name,
             serving_size: `${product.product.serving_quantity} ${product.product.serving_quantity_unit}`
@@ -78,18 +79,20 @@ app.get('/api/totals', async (req, res) => {
 
         const totals = {};
 
-        Object.entries(products.product.nutriments)
-            .reduce((acc, [key, value]) => {
-                if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt") return acc;
+        // Sum nutrition facts across all products
+        products.forEach(product => {
+            const productData = product.product;
+            Object.entries(productData.nutriments).forEach(([key, value]) => {
+                if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt") return;
                 const unitKey = key + "_unit";
-                const unit = productData.product.nutriments[unitKey] || "";
+                const unit = productData.nutriments[unitKey] || "";
                 if (key === "energy-kcal") {
-                value = Math.round(value);
-                acc["energy-kcal"] = `${value} ${unit}`.trim();
+                    value = Math.round(value);
+                    totals["energy-kcal"] = `${value} ${unit}`.trim();
                 } else if (key !== "energy") {
-                acc[key] = `${value} ${unit}`.trim();
+                    totals[key] = `${value} ${unit}`.trim();
                 }
-s
+
                 if (!totals[key]) {
                     totals[key] = 0;
                 }
@@ -97,10 +100,8 @@ s
                 if (typeof value === 'number') {
                     totals[key] += value;
                 }
-
-                return acc;
-            }, {}
-        );
+            });
+        });
         res.status(200).json(totals);
     } catch (error) {
         console.error('Error getting data:', error.message);
