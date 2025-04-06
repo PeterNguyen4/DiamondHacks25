@@ -1,15 +1,17 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const connectDB = require('./db'); // Import the database connection
-// Connect to MongoDB
+const connectDB = require('./db');
+const { GoogleGenAI } = require('@google/genai');
 const Product = require('./model/product')
+
 connectDB();
+
 const app = express();
 const PORT = 3001;
 app.use(cors());
 app.use(express.json());
-const { GoogleGenAI } = require('@google/genai');
+
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_API_KEY,
 });
@@ -102,7 +104,7 @@ app.get('/api/totals', async (req, res) => {
             
             reformattedTotals[newKey] = value;
         });
-        console.log('Reformatted Totals:', reformattedTotals);
+        //console.log('Reformatted Totals:', reformattedTotals);
         res.status(200).json(reformattedTotals);
     } catch (error) {
         console.error('Error getting data:', error.message);
@@ -125,16 +127,26 @@ app.get('/api/:productID', async (req, res) => {
     }
 });
 
-app.post('/api/genai', async (req, res) => {
+app.get('/genai', async (req, res) => {
     try {
-        const nutritionFacts = req.body.nutritionFacts;
-        if (!nutritionFacts) return res.status(400).json({ error: 'Nutrition facts are required' });
-        const nutritionValues = Object.entries(nutritionFacts).map(([key, value]) => `${key}: ${value}`).join(', ');
-        const prompt = `Based on the following nutritional values: ${nutritionValues}, in a short paragraph tell me about my overall health. Give me 2 values that are good including their health benefits and 2 values that are bad and the possible effects of said values. Explain all of this is like how a doctor would casually speak to me without any markdown formatting. Just a short paragraph`;
+        const products = await Product.find({}, 'product_name servings nutriments serving_quantity_unit serving_quantity');
+        const prompt = `You are a nutrition expert. I will provide you with a JSON containing the foods someone ate over the course of a single day. Each food item includes nutritional information such as calories, protein, carbohydrates, fats, fiber, sugar, sodium, and more. Your task is to analyze the entire day's intake and provide constructive, personalized feedback. 
+Avoid using markdown in your response.
+Please address the following in your response:
+1. Overall nutritional balance: Is the intake well-balanced in terms of macros and micronutrients? Avoid including any calculations but include numerical values in the response,.
+2. Strengths: Highlight what this person did well in their food choices.
+3. Areas for improvement: Identify any excessive or deficient nutrients and provide practical advice on how to improve future meals (foods to add, reduce or replace).
+
+Here is the JSON of the food intake: ${JSON.stringify(products)}
+
+Please ensure your response is concise, readable by splitting large paragraphs, easy to understand, and written in plain text suitable for display to the user.`;
+
         const response = await ai.models.generateContent({
             model: "gemini-2.0-flash",
             contents: prompt,
         });
+        console.log(response)
+        // Display the AI's response to the user
         res.json(response);
     } catch (error) {
         console.error('Error querying the GenAI API:', error.message);

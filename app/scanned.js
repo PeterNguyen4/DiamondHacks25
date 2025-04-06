@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight:'bold',
         marginHorizontal: 10,
-        paddingLeft:20
+        paddingLeft:10,
     },
     header: {
         position: 'absolute',

@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View,ScrollView, ActivityIndicator } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import React from 'react';
@@ -9,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 export default function Profile() {
     const [totals, setTotals] = useState(null);
     const [genaiResponse, setGenaiResponse] = useState(null);
+    const scrollViewRef = React.useRef(null); // Add a ref for the ScrollView
     const macAddress = '192.168.1.177'; // from bryan home wifi
     const winAddress = '192.168.1.22'; // peter home wifi
     const LOCALHOST = macAddress
@@ -16,7 +17,7 @@ export default function Profile() {
 
     useFocusEffect(
       React.useCallback(() => {
-        fetch(`http://${LOCALHOST}:3001/api/totals`) // Replace with your actual endpoint
+        fetch(`http://${LOCALHOST}:3001/api/totals`) 
           .then(response => response.json())
           .then(data => setTotals(data))
           .catch(error => console.error('Error fetching totals:', error));
@@ -31,14 +32,16 @@ export default function Profile() {
         }
 
         // Send the nutrition facts to the /api/genai endpoint
-        const response = await axios.post(`http://${LOCALHOST}:3001/api/genai`, {
-            nutritionFacts: totals, // Send the totals as nutritionFacts
-        });
+        const response = await axios.get(`http://${LOCALHOST}:3001/genai`);
 
         // Handle the response from the server
         const genaiContent = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No response content available.";
         setGenaiResponse(genaiContent);
-        // console.log('GenAI Response:', genaiContent);
+
+        // Scroll to the top of the response area
+        setTimeout(() => {
+            scrollViewRef.current?.scrollTo({ y: 500, animated: true });
+        }, 100); // Add a slight delay to ensure the response is rendered
     } catch (error) {
         console.error('Error sending nutrition facts:', error.message);
         console.log('Error', 'Failed to get advice from the server.');
@@ -49,7 +52,8 @@ export default function Profile() {
         <SafeAreaView style={styles.container}>
             {totals ? (
                 <>
-                  <ScrollView style={styles.scrollView}>
+                  <Text style={styles.nutrition}> Total Nutrition Facts:</Text>
+                  <ScrollView style={styles.scrollView} ref={scrollViewRef}>
                     <View style={styles.table}>
                       {NUTRITION_LABELS.map((key) => (
                           <View key={key} style={styles.row}>
@@ -134,6 +138,13 @@ const styles = StyleSheet.create({
         height: 50,
         width: '100%',
         marginVertical: 10,
+    },
+    nutrition: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginHorizontal: 10,
+        alignSelf: 'flex-start', // Aligns the text to the left
+        paddingLeft: 10,
     },
     buttonContainer: {
         marginTop: 20,
