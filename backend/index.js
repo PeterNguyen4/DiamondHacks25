@@ -42,7 +42,7 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
-app.get('/api/product-list', async (req, res) => {
+app.get('/api/summary', async (req, res) => {
     try {
         const products = await Product.find({}, { 
             projection: {
@@ -51,7 +51,7 @@ app.get('/api/product-list', async (req, res) => {
                 'product.serving_quantity_unit': 1, 
                 _id: 0
             }
-        }).toArray(); // Fetch the names and serving sizes of all products
+        }); // Fetch the names and serving sizes of all products
 
         const productNamesAndServingSizes = products.map(product => ({
             name: product.product.product_name,
@@ -64,7 +64,7 @@ app.get('/api/product-list', async (req, res) => {
     }
 });
 
-app.get('/api/product-summary', async (req, res) => {
+app.get('/api/totals', async (req, res) => {
     try {
         const products = await Product.find({}, { 
             projection: {
@@ -74,32 +74,34 @@ app.get('/api/product-summary', async (req, res) => {
                 'product.nutriments:': 1,
                 _id: 0
             }
-        }).toArray(); // Fetch the names and serving sizes of all products
+        }); // Fetch the names and serving sizes of all products
 
-        const productNutrition = Object.entries(products.product.nutriments)
+        const totals = {};
+
+        Object.entries(products.product.nutriments)
             .reduce((acc, [key, value]) => {
                 if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt") return acc;
-                
                 const unitKey = key + "_unit";
                 const unit = productData.product.nutriments[unitKey] || "";
-
                 if (key === "energy-kcal") {
                 value = Math.round(value);
                 acc["energy-kcal"] = `${value} ${unit}`.trim();
                 } else if (key !== "energy") {
                 acc[key] = `${value} ${unit}`.trim();
                 }
+s
+                if (!totals[key]) {
+                    totals[key] = 0;
+                }
+
+                if (typeof value === 'number') {
+                    totals[key] += value;
+                }
 
                 return acc;
             }, {}
         );
-
-        const productSummary = products.map(product => ({
-            name: product.product.product_name,
-            serving_size: `${product.product.serving_quantity} ${product.product.serving_quantity_unit}`,
-            nutrition_facts: productNutrition
-        }));
-        res.status(200).json(productSummary);
+        res.status(200).json(totals);
     } catch (error) {
         console.error('Error getting data:', error.message);
         res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
