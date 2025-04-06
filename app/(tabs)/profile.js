@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View, FlatList } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View, FlatList, Button,ScrollView } from 'react-native'
 import { useState, useEffect } from 'react'
 
 export default function Profile() {
@@ -7,12 +7,13 @@ export default function Profile() {
   const winAddress = '192.168.1.22'; // peter home wifi
 
   useEffect(() => {
-    fetch(`http://${winAddress}:3001/api/totals`) // Replace with your actual endpoint
+    fetch(`http://${macAddress}:3001/api/totals`) // Replace with your actual endpoint
       .then(response => response.json())
       .then(data => setTotals(data))
       .catch(error => console.error('Error fetching recipes:', error));
   }, []);
 
+  console.log(totals)
     return (
         <View style={styles.container}>
             {totals ? (
@@ -44,7 +45,7 @@ export default function Profile() {
                               <View key={key} style={styles.row}>
                                   <Text style={styles.cell}>{key.replace(/-/g, " ")}:</Text>
                                   <Text style={styles.cell}>
-                                      {((product.product.nutriments[key] || 0) * servings).toFixed(2)}
+                                      {(totals[key] ? parseFloat(totals[key]).toFixed(2) : 0)}
                                   </Text>
                               </View>
                           ))}
