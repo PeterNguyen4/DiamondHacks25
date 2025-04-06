@@ -44,6 +44,28 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
+app.get('/api/product-list', async (req, res) => {
+    try {
+        const products = await Product.find({}, { 
+            projection: {
+                'product.product_name': 1, 
+                'product.serving_quantity': 1, 
+                'product.serving_quantity_unit': 1, 
+                _id: 0
+            }
+        }).toArray(); // Fetch the names and serving sizes of all products
+
+        const productNamesAndServingSizes = products.map(product => ({
+            name: product.product.product_name,
+            serving_size: `${product.product.serving_quantity} ${product.product.serving_quantity_unit}`
+        }));
+        res.status(200).json(productNamesAndServingSizes);
+    } catch (error) {
+        console.error('Error getting data:', error.message);
+        res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
+    }
+});
+
 app.get('/api/:productID', async (req, res) => {
     try {
         const productID = req.params.productID
