@@ -1,64 +1,76 @@
-import { SafeAreaView, StyleSheet, Text, View, FlatList, Button,ScrollView } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View,ScrollView, ActivityIndicator } from 'react-native'
 import { useState, useEffect } from 'react'
+import axios from 'axios';
+import ActionButton from '../../components/ActionButton';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 export default function Profile() {
-  const [totals, setTotals] = useState(null);
-  const macAddress = '192.168.1.177'; // from bryan home wifi
-  const winAddress = '192.168.1.22'; // peter home wifi
+    const [totals, setTotals] = useState(null);
+    const [genaiResponse, setGenaiResponse] = useState(null);
+    const macAddress = '192.168.1.177'; // from bryan home wifi
+    const winAddress = '192.168.1.22'; // peter home wifi
+    const NUTRITION_LABELS = ["Calories","Fat","Carbohydrates","Proteins","Sugars","Calcium","Cholesterol","Fiber","Iron","Monounsaturated Fat","Polyunsaturated Fat","Salt","Saturated Fat","Sodium","Trans Fat","Vitamin A","Vitamin B1","Vitamin B2","Vitamin C","Vitamin PP"]
 
   useEffect(() => {
-    fetch(`http://${macAddress}:3001/api/totals`) // Replace with your actual endpoint
+    fetch(`http://${winAddress}:3001/api/totals`) // Replace with your actual endpoint
       .then(response => response.json())
       .then(data => setTotals(data))
       .catch(error => console.error('Error fetching recipes:', error));
   }, []);
 
-  console.log(totals)
+  const handleAdviceRequest = async () => {
+    try {
+        if (!totals) {
+            console.log('Error', 'No nutrition facts available to send.');
+            return;
+        }
+
+        // Send the nutrition facts to the /api/genai endpoint
+        const response = await axios.post(`http://${winAddress}:3001/api/genai`, {
+            nutritionFacts: totals, // Send the totals as nutritionFacts
+        });
+
+        // Handle the response from the server
+        const genaiContent = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No response content available.";
+        setGenaiResponse(genaiContent);
+        // console.log('GenAI Response:', genaiContent);
+    } catch (error) {
+        console.error('Error sending nutrition facts:', error.message);
+        console.log('Error', 'Failed to get advice from the server.');
+    }
+  };
+
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {totals ? (
                 <>
                   <ScrollView style={styles.scrollView}>
-                      <View style={styles.table}>
-                          {[
-                              "energy-kcal",
-                              "fat",
-                              "carbohydrates",
-                              "proteins",
-                              "sugars",
-                              "calcium",
-                              "cholesterol",
-                              "fiber",
-                              "iron",
-                              "monounsaturated-fat",
-                              "polyunsaturated-fat",
-                              "salt",
-                              "saturated-fat",
-                              "sodium",
-                              "trans-fat",
-                              "vitamin-a",
-                              "vitamin-b1",
-                              "vitamin-b2",
-                              "vitamin-c",
-                              "vitamin-pp",
-                          ].map((key) => (
-                              <View key={key} style={styles.row}>
-                                  <Text style={styles.cell}>{key.replace(/-/g, " ")}:</Text>
-                                  <Text style={styles.cell}>
-                                      {(totals[key] ? parseFloat(totals[key]).toFixed(2) : 0)}
-                                  </Text>
-                              </View>
-                          ))}
-                      </View>
+                    <View style={styles.table}>
+                      {NUTRITION_LABELS.map((key) => (
+                          <View key={key} style={styles.row}>
+                              <Text style={styles.cell}>{key}</Text>
+                              <Text style={[styles.cell, { textAlign: 'right' }]}>
+                                  {(totals[key] ? parseFloat(totals[key]).toFixed(2) : 0)}
+                              </Text>
+                          </View>
+                      ))}
+                    </View>
+                    <View style={styles.container}>
+                      {genaiResponse ? (
+                        <>
+                          <Text style={styles.subheading}>GenAI Nutrition Advice</Text>
+                          <Text style={styles.advice}>{genaiResponse}</Text>  
+                        </>
+                      )
+                          : null}
+                    </View>
                   </ScrollView>
+                  <ActionButton icon={<FontAwesome6 name="question" size={20} color="white" />} text='Get Advice' onPress={handleAdviceRequest} />
                 </>
             ) : (
-                <Text style={styles.text}>Loading...</Text>
+                <ActivityIndicator color="black" style={{ justifyContent: 'center', position: 'absolute' }}/>
             )}
-            <View style={styles.buttonContainer}>
-                <Button title="Get Advice" />
-            </View>
-        </View>
+        </SafeAreaView>
     );
 }
   
@@ -71,8 +83,7 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
-        width: '100%',
-        marginTop: 20,
+        width: '100%'
     },
     content: {
         justifyContent: 'flex-start',
@@ -88,12 +99,18 @@ const styles = StyleSheet.create({
         marginTop: 100,
         textAlign: 'center',
     },
+    subheading: {
+        fontSize: 20,
+        marginTop: 20,
+        marginBottom: 20,
+        alignSelf: 'flex-start',
+    },
     table: {
         width: '100%',
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5,
-        padding: 10,
+        padding: 32,
     },
     row: {
         flexDirection: 'row',
@@ -130,4 +147,10 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginHorizontal: 10,
     },
+    advice: {
+      textAlign: 'left',
+      fontSize: 16,
+      paddingBottom: 32,
+      lineHeight: 24,
+    }
 });
