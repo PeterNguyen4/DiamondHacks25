@@ -2,6 +2,7 @@
   "expo": {
     "name": "DiamondHacks25",
     "slug": "DiamondHacks25",
+    "scheme": "DiamondHacks25",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,7 +23,11 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

@@ -5,15 +5,13 @@ const connectDB = require('./db'); // Import the database connection
 // Connect to MongoDB
 const Product = require('./model/product')
 connectDB();
-
 const app = express();
 const PORT = 3001;
-
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
+app.get('/test/:productID', (req, res) => {
+    console.log('ID:', req.params.productID)
 });
 
 // Receive modified nutrition facts and save to database
