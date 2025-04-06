@@ -54,31 +54,18 @@ app.get('/api/summary', async (req, res) => {
 
 app.get('/api/totals', async (req, res) => {
     try {
-        const products = await Product.find({}, { 
-            projection: {
-                'product_name': 1, 
-                'serving_quantity': 1, 
-                'product.serving_quantity_unit': 1, 
-                'product.nutriments:': 1,
-                _id: 0
-            }
-        }); // Fetch the names and serving sizes of all products
+        const products = await Product.find({}, 'nutriments' )
+        // Fetch the names and serving sizes of all products
 
         const totals = {};
-
+        console.log(products)
         // Sum nutrition facts across all products
         products.forEach(product => {
-            const productData = product.product;
-            Object.entries(productData.nutriments).forEach(([key, value]) => {
-                if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt") return;
+            const productNutrition = product.nutriments;
+            Object.entries(productNutrition).forEach(([key, value]) => {
+                if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt" || key.endsWith('energy')) return;
                 const unitKey = key + "_unit";
-                const unit = productData.nutriments[unitKey] || "";
-                if (key === "energy-kcal") {
-                    value = Math.round(value);
-                    totals["energy-kcal"] = `${value} ${unit}`.trim();
-                } else if (key !== "energy") {
-                    totals[key] = `${value} ${unit}`.trim();
-                }
+                const unit = productNutrition[unitKey] || "";
 
                 if (!totals[key]) {
                     totals[key] = 0;
