@@ -1,14 +1,109 @@
 const express = require('express');
 const axios = require('axios');
-
+const cors = require('cors');
+const connectDB = require('./db'); // Import the database connection
+// Connect to MongoDB
+const Product = require('./model/product')
+connectDB();
 const app = express();
 const PORT = 3001;
-
-// Middleware to parse JSON
+app.use(cors());
 app.use(express.json());
 
 app.get('/test/:productID', (req, res) => {
     console.log('ID:', req.params.productID)
+});
+
+// Receive modified nutrition facts and save to database
+app.post('/api/product', async (req, res) => {
+    try {
+        const productData = req.body; // Get JSON object from request body
+        if (!productData) {
+            return res.status(400).json({ error: 'Invalid product data' });
+        }
+        const product = new Product(productData);
+        const result = await product.save(); // Save to MongoDB
+        res.status(201).json({ message: 'Product saved successfully', id: result._id });
+    } catch (error) {
+        console.error('Error saving product to database:', error.message);
+        res.status(500).json({ error: 'Failed to save product to database' });
+    }
+});
+
+// Retrieve all products from the database
+app.get('/api/products', async (req, res) => {
+    try {
+        console.log('get all endpoint')
+        const products = await Product.find({}); // Fetch all products
+        res.status(200).json(products);
+    } catch (error) {
+        console.error('Error getting data:', error.message);
+        res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
+    }
+});
+
+app.get('/api/product-list', async (req, res) => {
+    try {
+        const products = await Product.find({}, { 
+            projection: {
+                'product.product_name': 1, 
+                'product.serving_quantity': 1, 
+                'product.serving_quantity_unit': 1, 
+                _id: 0
+            }
+        }).toArray(); // Fetch the names and serving sizes of all products
+
+        const productNamesAndServingSizes = products.map(product => ({
+            name: product.product.product_name,
+            serving_size: `${product.product.serving_quantity} ${product.product.serving_quantity_unit}`
+        }));
+        res.status(200).json(productNamesAndServingSizes);
+    } catch (error) {
+        console.error('Error getting data:', error.message);
+        res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
+    }
+});
+
+app.get('/api/product-summary', async (req, res) => {
+    try {
+        const products = await Product.find({}, { 
+            projection: {
+                'product.product_name': 1, 
+                'product.serving_quantity': 1, 
+                'product.serving_quantity_unit': 1, 
+                'product.nutriments:': 1,
+                _id: 0
+            }
+        }).toArray(); // Fetch the names and serving sizes of all products
+
+        const productNutrition = Object.entries(products.product.nutriments)
+            .reduce((acc, [key, value]) => {
+                if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt") return acc;
+                
+                const unitKey = key + "_unit";
+                const unit = productData.product.nutriments[unitKey] || "";
+
+                if (key === "energy-kcal") {
+                value = Math.round(value);
+                acc["energy-kcal"] = `${value} ${unit}`.trim();
+                } else if (key !== "energy") {
+                acc[key] = `${value} ${unit}`.trim();
+                }
+
+                return acc;
+            }, {}
+        );
+
+        const productSummary = products.map(product => ({
+            name: product.product.product_name,
+            serving_size: `${product.product.serving_quantity} ${product.product.serving_quantity_unit}`,
+            nutrition_facts: productNutrition
+        }));
+        res.status(200).json(productSummary);
+    } catch (error) {
+        console.error('Error getting data:', error.message);
+        res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
+    }
 });
 
 app.get('/api/:productID', async (req, res) => {
