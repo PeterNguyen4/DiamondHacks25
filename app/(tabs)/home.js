@@ -6,7 +6,7 @@ export default function Home() {
   const macAddress = '192.168.1.177'; // from bryan home wifi
 
   useEffect(() => {
-    fetch(`http://${macAddress}:3001/api/product-list`) // Replace with your actual endpoint
+    fetch(`http://${macAddress}:3001/api/summary`) // Replace with your actual endpoint
       .then(response => response.json())
       .then(data => setProducts(data))
       .catch(error => console.error('Error fetching recipes:', error));
@@ -20,7 +20,6 @@ export default function Home() {
     </View>
   );
 
-  console.log(products)
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
