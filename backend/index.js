@@ -127,6 +127,28 @@ app.get('/api/:productID', async (req, res) => {
 });
 
 app.post('/api/genai', async (req, res) => {
+    const products = await Product.find({}, 'nutriments' )
+        // Fetch the names and serving sizes of all products
+
+        const totals = {};
+        // Sum nutrition facts across all products
+        products.forEach(product => {
+            const productNutrition = product.nutriments;
+            Object.entries(productNutrition).forEach(([key, value]) => {
+                if (key.endsWith("_unit") || key.endsWith("_100g") || key.endsWith("_serving") || key === "salt" || key.endsWith('energy')) return;
+                const unitKey = key + "_unit";
+                const unit = productNutrition[unitKey] || "";
+
+                if (!totals[key]) {
+                    totals[key] = 0;
+                }
+
+                if (typeof value === 'number') {
+                    totals[key] += value;
+                }
+            });
+        });
+
     try {
         const nutritionFacts = req.body.nutritionFacts;
         if (!nutritionFacts) return res.status(400).json({ error: 'Nutrition facts are required' });
@@ -136,6 +158,23 @@ app.post('/api/genai', async (req, res) => {
             model: "gemini-2.0-flash",
             contents: prompt,
         });
+        res.json(response);
+    } catch (error) {
+        console.error('Error querying the GenAI API:', error.message);
+        res.status(500).json({ error: 'Failed to fetch data from the GenAI API' });
+    }
+});
+
+app.get('/api/genai', async (req, res) => {
+    try {
+        const products = await Product.find({}, 'product_name nutriments' )
+        console.log('Products:', products)
+        const prompt = `Based on the following products and nutrition values: ${products}, in a 2-3 sentences tell me about my overall health. Give me 2 values that are good including their health benefits and 2 values that are bad and the possible effects of said values. Explain all of this is like how a doctor would casually speak. Use ocean themed emojis instead of bullet points when talking about my pros and cons`;
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash",
+            contents: prompt,
+        });
+        console.log('GenAI Response:', response);
         res.json(response);
     } catch (error) {
         console.error('Error querying the GenAI API:', error.message);
