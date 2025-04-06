@@ -44,21 +44,8 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/summary', async (req, res) => {
     try {
-        const products = await Product.find({}, { 
-            projection: {
-                'product.product_name': 1, 
-                'product.serving_quantity': 1, 
-                'product.serving_quantity_unit': 1, 
-                _id: 0
-            }
-        }); // Fetch the names and serving sizes of all products
-
-        // Join serving quantity and unit into a single string
-        const productNamesAndServingSizes = products.map(product => ({
-            name: product.product.product_name,
-            serving_size: `${product.product.serving_quantity} ${product.product.serving_quantity_unit}`
-        }));
-        res.status(200).json(productNamesAndServingSizes);
+        const products = await Product.find({}, 'product_name servings serving_quantity_unit serving_quantity') // Fetch the names and serving sizes of all products
+        res.status(200).json(products);
     } catch (error) {
         console.error('Error getting data:', error.message);
         res.status(500).json({ error: 'Failed to fetch all data from MongoDB' });
@@ -69,8 +56,8 @@ app.get('/api/totals', async (req, res) => {
     try {
         const products = await Product.find({}, { 
             projection: {
-                'product.product_name': 1, 
-                'product.serving_quantity': 1, 
+                'product_name': 1, 
+                'serving_quantity': 1, 
                 'product.serving_quantity_unit': 1, 
                 'product.nutriments:': 1,
                 _id: 0
@@ -111,10 +98,13 @@ app.get('/api/totals', async (req, res) => {
 
 app.get('/api/:productID', async (req, res) => {
     try {
-        const productID = req.params.productID
-        const apiURL = `https://world.openfoodfacts.net/api/v2/product/${productID}?product_type=food&fields=product_name%2Cnutriments%2Cselected_images%2Cserving_quantity%2Cserving_quantity_unit`
-        const response = await axios.get(apiURL);
-        res.json(response.data);
+        // MOCK THE API SINCE ITS DOWN RN
+        res.json({"code": "0038000265013", "product": {"nutriments": {"added-sugars": 9, "added-sugars_100g": 40.9, "added-sugars_serving": 9, "added-sugars_unit": "g", "added-sugars_value": 9, "carbohydrates": 17, "carbohydrates_100g": 77.3, "carbohydrates_serving": 17, "carbohydrates_unit": "g", "carbohydrates_value": 17, "energy": 377, "energy-kcal": 90, "energy-kcal_100g": 409, "energy-kcal_serving": 90, "energy-kcal_unit": "kcal", "energy-kcal_value": 90, "energy-kcal_value_computed": 90, "energy_100g": 1710, "energy_serving": 377, "energy_unit": "kcal", "energy_value": 90, "fat": 2, "fat_100g": 9.09, "fat_serving": 2, "fat_unit": "g", "fat_value": 2, "folates": 0.000319, "folates_100g": 0.00145, "folates_serving": 0.000319, "folates_unit": "µg", "folates_value": 319, "fruits-vegetables-legumes-estimate-from-ingredients_100g": 1.44230769230769, "fruits-vegetables-legumes-estimate-from-ingredients_serving": 1.44230769230769, "fruits-vegetables-nuts-estimate-from-ingredients_100g": 1.44230769230769, "fruits-vegetables-nuts-estimate-from-ingredients_serving": 1.44230769230769, "insoluble-fiber": 0, "insoluble-fiber_100g": 0, "insoluble-fiber_serving": 0, "insoluble-fiber_unit": "g", "insoluble-fiber_value": 0, "iron": 0.00036, "iron_100g": 0.00164, "iron_serving": 0.00036, "iron_unit": "g", "iron_value": 0.00036, "nova-group": 4, "nova-group_100g": 4, "nova-group_serving": 4, "nutrition-score-fr": 23, "nutrition-score-fr_100g": 23, "proteins": 1, "proteins_100g": 4.55, "proteins_serving": 1, "proteins_unit": "g", "proteins_value": 1, "salt": 0.2625, "salt_100g": 1.19, "salt_serving": 0.2625, "salt_unit": "g", "salt_value": 0.2625, "saturated-fat": 0.5, "saturated-fat_100g": 2.27, "saturated-fat_serving": 0.5, "saturated-fat_unit": "g", "saturated-fat_value": 0.5, "sodium": 0.105, "sodium_100g": 0.477, "sodium_serving": 0.105, "sodium_unit": "g", "sodium_value": 0.105, "soluble-fiber": 0, "soluble-fiber_100g": 0, "soluble-fiber_serving": 0, "soluble-fiber_unit": "g", "soluble-fiber_value": 0, "sugars": 9, "sugars_100g": 40.9, "sugars_serving": 9, "sugars_unit": "g", "sugars_value": 9, "vitamin-b2": 0.00013, "vitamin-b2_100g": 0.000591, "vitamin-b2_serving": 0.00013, "vitamin-b2_unit": "g", "vitamin-b2_value": 0.00013, "vitamin-b9": 0.00004, "vitamin-b9_100g": 0.000182, "vitamin-b9_serving": 0.00004, "vitamin-b9_unit": "g", "vitamin-b9_value": 0.00004, "vitamin-pp": 0.009091, "vitamin-pp_100g": 0.0413, "vitamin-pp_serving": 0.009091, "vitamin-pp_unit": "mg", "vitamin-pp_value": 9.091}, "product_name": "The original crispy marshmallow squares, the original", "schema_version": 998, "selected_images": {"front": [Object], "ingredients": [Object], "nutrition": [Object]}, "serving_quantity": "22", "serving_quantity_unit": "g"}, "status": 1, "status_verbose": "product found"})
+        
+        // const productID = req.params.productID
+        // const apiURL = `https://world.openfoodfacts.net/api/v2/product/${productID}?product_type=food&fields=product_name%2Cnutriments%2Cselected_images%2Cserving_quantity%2Cserving_quantity_unit`
+        // const response = await axios.get(apiURL);
+        // res.json(response.data);
     } catch (error) {
         console.error('Error querying the API:', error.message);
         res.status(500).json({ error: 'Failed to fetch data from the API' });
