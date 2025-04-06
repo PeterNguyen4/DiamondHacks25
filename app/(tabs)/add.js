@@ -46,9 +46,6 @@ export default function App() {
                     console.log('!!!BARCODE ID:', barcodeData.data);
                     setSharedData(barcodeData.data); // Store data in context
                     router.push('../scanned'); // Navigate to the scanned route
-                    setTimeout(() => {
-                        scannerState.current = false;
-                    }, 1000); // Reset scanner state after 1 second
                 }
             }} 
         /> 
