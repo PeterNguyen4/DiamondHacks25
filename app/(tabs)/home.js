@@ -1,24 +1,23 @@
 import { SafeAreaView, StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icons
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function Home() {
   const [products, setProducts] = useState(null);
   const macAddress = '192.168.1.177'; // from bryan home wifi
   const winAddress = '192.168.1.22'; // peter home wifi
-
+  const LOCALHOST = macAddress
 
   useEffect(() => {
-    fetch(`http://${winAddress}:3001/api/summary`) // Replace with your actual endpoint
+    fetch(`http://${LOCALHOST}:3001/api/summary`) // Replace with your actual endpoint
       .then(response => response.json())
       .then(data => setProducts(data))
       .catch(error => console.error('Error fetching recipes:', error));
   }, []);
 
   const deleteProduct = (id) => {
-    fetch(`http://${winAddress}:3001/api/${id}`, {
+    fetch(`http://${LOCALHOST}:3001/api/${id}`, {
       method: 'DELETE',
     })
       .then(response => {

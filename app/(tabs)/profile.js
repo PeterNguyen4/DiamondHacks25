@@ -1,7 +1,7 @@
-
 import { SafeAreaView, StyleSheet, Text, View,ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import React from 'react';
 import ActionButton from '../../components/ActionButton';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,14 +11,17 @@ export default function Profile() {
     const [genaiResponse, setGenaiResponse] = useState(null);
     const macAddress = '192.168.1.177'; // from bryan home wifi
     const winAddress = '192.168.1.22'; // peter home wifi
+    const LOCALHOST = macAddress
     const NUTRITION_LABELS = ["Calories","Fat","Carbohydrates","Proteins","Sugars","Calcium","Cholesterol","Fiber","Iron","Monounsaturated Fat","Polyunsaturated Fat","Salt","Saturated Fat","Sodium","Trans Fat","Vitamin A","Vitamin B1","Vitamin B2","Vitamin C","Vitamin PP"]
 
-  useEffect(() => {
-    fetch(`http://${winAddress}:3001/api/totals`) // Replace with your actual endpoint
-      .then(response => response.json())
-      .then(data => setTotals(data))
-      .catch(error => console.error('Error fetching recipes:', error));
-  }, []);
+    useFocusEffect(
+      React.useCallback(() => {
+        fetch(`http://${LOCALHOST}:3001/api/totals`) // Replace with your actual endpoint
+          .then(response => response.json())
+          .then(data => setTotals(data))
+          .catch(error => console.error('Error fetching totals:', error));
+      }, [])
+    );
 
   const handleAdviceRequest = async () => {
     try {
@@ -28,7 +31,7 @@ export default function Profile() {
         }
 
         // Send the nutrition facts to the /api/genai endpoint
-        const response = await axios.post(`http://${winAddress}:3001/api/genai`, {
+        const response = await axios.post(`http://${LOCALHOST}:3001/api/genai`, {
             nutritionFacts: totals, // Send the totals as nutritionFacts
         });
 

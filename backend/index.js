@@ -37,7 +37,6 @@ app.post('/api/product', async (req, res) => {
 // Retrieve all products from the database
 app.get('/api/products', async (req, res) => {
     try {
-        // console.log('get all endpoint')
         const products = await Product.find({}); // Fetch all products
         res.status(200).json(products);
     } catch (error) {

@@ -10,10 +10,6 @@ export default function CancelButton({ icon, onPress }) {
 
 const styles = StyleSheet.create({
     button: {
-        left: 0,
-        top: 0,
-        position: 'absolute',
-        marginTop: 20,
-        marginLeft: 20,
-    }
+        marginLeft: 20, // Add space between the button and the left border
+    },
 });

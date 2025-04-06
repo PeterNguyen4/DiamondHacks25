@@ -3,25 +3,25 @@ import { View, Text, StyleSheet, Button, Alert, ScrollView, SafeAreaView, Activi
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { useState, useEffect } from 'react'; // Added useState and useEffect
-import { Picker } from '@react-native-picker/picker'; // Import Picker for dropdown
 import ActionButton from '../components/ActionButton';
 import CancelButton from '../components/CancelButton'; // Import IconButton for back button
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 export default function Scanned() {
+    const macAddress = '192.168.1.177'; // from bryan home wifi
+    const winAddress = '192.168.1.22'; // peter home wifi
+    const LOCALHOST = macAddress
     const { sharedData } = useData();
     const router = useRouter();
     const [product, setProduct] = useState(null); // State to store API result
     const [servings, setServings] = useState(1); // State for selected servings
-    const macAddress = '192.168.1.177'; // from bryan home wifi
-    const winAddress = '192.168.1.22'; // peter home wifi
     const NUTRITION_LABELS = ["Calories","Fat","Carbohydrates","Proteins","Sugars","Calcium","Cholesterol","Fiber","Iron","Monounsaturated Fat","Polyunsaturated Fat","Salt","Saturated Fat","Sodium","Trans Fat","Vitamin A","Vitamin B1","Vitamin B2","Vitamin C","Vitamin PP"]
     const RAW_API_LABELS = ["energy-kcal","fat","carbohydrates","proteins","sugars","calcium","cholesterol","fiber","iron","monounsaturated-fat","polyunsaturated-fat","salt","saturated-fat","sodium","trans-fat","vitamin-a","vitamin-b1","vitamin-b2","vitamin-c","vitamin-pp"]
 
     useEffect(() => {
         const sendData = async (data) => {
             try {
-                const response = await axios.get(`http://${winAddress}:3001/api/${data}`);
+                const response = await axios.get(`http://${LOCALHOST}:3001/api/${data}`);
                 const jsonVer = response.data; 
                 setProduct(jsonVer); // Update state with API result
             } catch (error) {
@@ -46,7 +46,7 @@ export default function Scanned() {
                 }, {}),
             };
 
-            await axios.post(`http://${winAddress}:3001/api/product`, dataToSave);
+            await axios.post(`http://${LOCALHOST}:3001/api/product`, dataToSave);
             router.push('/home');
         } catch (error) {
             console.error("Error saving data:", error);
@@ -62,17 +62,17 @@ export default function Scanned() {
         <SafeAreaView style={styles.container}>
             {product ? (
                 <>
-                    <View style={{ position: 'relative', width: '100%', alignItems: 'center' }}>
-                        <CancelButton icon={<FontAwesome6 name="arrow-left" size={24} color="black" />} onPress={handleCancel}/>
-                        <Text style={styles.title}>{product.product.product_name}</Text>
+                    <View style={styles.headerRow}>
+                        <CancelButton icon={<FontAwesome6 name="arrow-left" size={24} color="black" />} onPress={handleCancel} />
+                        <Text style={styles.title}>
+                            {product.product.product_name}
+                        </Text>
                     </View>
                     
                     <View><Text style={styles.text}>
-                        Nutrition Facts: {product.product.serving_quantity} {product.product.serving_quantity_unit} per serving
+                        {product.product.serving_quantity} {product.product.serving_quantity_unit} per serving
                     </Text></View>
                     
-
-                    {/* Buttons to increase or decrease servings */}
                     <View style={styles.servingsContainer}>
                         <Button
                             title="-"
@@ -84,7 +84,7 @@ export default function Scanned() {
                             onPress={() => setServings((prev) => prev + 1)} // Increase servings
                         />
                     </View>
-
+                    <Text style={styles.nutrition}> Nutrition Facts:</Text>
                     <ScrollView style={styles.scrollView}>
                         <View style={styles.table}>
                             {NUTRITION_LABELS.map((key, index) => (
@@ -127,7 +127,9 @@ const styles = StyleSheet.create({
         marginVertical: 5,
     },
     title: {
-        fontSize:32
+        fontSize: 30,
+        textAlign: 'center', // Center the title text
+        flex: 1, // Allow the title to take up the remaining space
     },
     table: {
         width: '100%',
@@ -170,5 +172,24 @@ const styles = StyleSheet.create({
     servingsText: {
         fontSize: 18,
         marginHorizontal: 10,
+    },
+    nutrition:{
+        fontSize: 20,
+        fontWeight:'bold',
+        marginHorizontal: 10,
+        paddingLeft:20
+    },
+    header: {
+        position: 'absolute',
+        top: 50, // Adjusted to ensure it's above the title
+        left: 10,
+        zIndex: 1,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center', // Vertically align CancelButton and title
+        justifyContent: 'space-between', // Ensure proper spacing between CancelButton and title
+        marginTop: 10,
+        marginBottom: 10,
     },
 });
