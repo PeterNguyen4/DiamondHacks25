@@ -1,9 +1,12 @@
 import { useData } from './context/DataContext';
-import { View, Text, StyleSheet, Button, Alert, ScrollView } from 'react-native'; // Added Alert and ScrollView import
+import { View, Text, StyleSheet, Button, Alert, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native'; // Added Alert and ScrollView import
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { useState, useEffect } from 'react'; // Added useState and useEffect
 import { Picker } from '@react-native-picker/picker'; // Import Picker for dropdown
+import ActionButton from '../components/ActionButton';
+import CancelButton from '../components/CancelButton'; // Import IconButton for back button
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 export default function Scanned() {
     const { sharedData } = useData();
@@ -11,11 +14,14 @@ export default function Scanned() {
     const [product, setProduct] = useState(null); // State to store API result
     const [servings, setServings] = useState(1); // State for selected servings
     const macAddress = '192.168.1.177'; // from bryan home wifi
+    const winAddress = '192.168.1.22'; // peter home wifi
+    const NUTRITION_LABELS = ["Calories","Fat","Carbohydrates","Proteins","Sugars","Calcium","Cholesterol","Fiber","Iron","Monounsaturated Fat","Polyunsaturated Fat","Salt","Saturated Fat","Sodium","Trans Fat","Vitamin A","Vitamin B1","Vitamin B2","Vitamin C","Vitamin PP"]
+    const RAW_API_LABELS = ["energy-kcal","fat","carbohydrates","proteins","sugars","calcium","cholesterol","fiber","iron","monounsaturated-fat","polyunsaturated-fat","salt","saturated-fat","sodium","trans-fat","vitamin-a","vitamin-b1","vitamin-b2","vitamin-c","vitamin-pp"]
 
     useEffect(() => {
         const sendData = async (data) => {
             try {
-                const response = await axios.get(`http://${macAddress}:3001/api/${data}`);
+                const response = await axios.get(`http://${winAddress}:3001/api/${data}`);
                 const jsonVer = response.data; 
                 setProduct(jsonVer); // Update state with API result
             } catch (error) {
@@ -40,7 +46,7 @@ export default function Scanned() {
                 }, {}),
             };
 
-            await axios.post(`http://${macAddress}:3001/api/product`, dataToSave);
+            await axios.post(`http://${winAddress}:3001/api/product`, dataToSave);
             router.push('/home');
         } catch (error) {
             console.error("Error saving data:", error);
@@ -53,13 +59,18 @@ export default function Scanned() {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {product ? (
                 <>
-                    <Text style={styles.title}>{product.product.product_name}</Text>
-                    <Text style={styles.text}>
+                    <View style={{ position: 'relative', width: '100%', alignItems: 'center' }}>
+                        <CancelButton icon={<FontAwesome6 name="arrow-left" size={24} color="black" />} onPress={handleCancel}/>
+                        <Text style={styles.title}>{product.product.product_name}</Text>
+                    </View>
+                    
+                    <View><Text style={styles.text}>
                         Nutrition Facts: {product.product.serving_quantity} {product.product.serving_quantity_unit} per serving
-                    </Text>
+                    </Text></View>
+                    
 
                     {/* Buttons to increase or decrease servings */}
                     <View style={styles.servingsContainer}>
@@ -76,46 +87,23 @@ export default function Scanned() {
 
                     <ScrollView style={styles.scrollView}>
                         <View style={styles.table}>
-                            {[
-                                "energy-kcal",
-                                "fat",
-                                "carbohydrates",
-                                "proteins",
-                                "sugars",
-                                "calcium",
-                                "cholesterol",
-                                "fiber",
-                                "iron",
-                                "monounsaturated-fat",
-                                "polyunsaturated-fat",
-                                "salt",
-                                "saturated-fat",
-                                "sodium",
-                                "trans-fat",
-                                "vitamin-a",
-                                "vitamin-b1",
-                                "vitamin-b2",
-                                "vitamin-c",
-                                "vitamin-pp",
-                            ].map((key) => (
+                            {NUTRITION_LABELS.map((key, index) => (
                                 <View key={key} style={styles.row}>
-                                    <Text style={styles.cell}>{key.replace(/-/g, " ")}:</Text>
-                                    <Text style={styles.cell}>
-                                        {((product.product.nutriments[key] || 0) * servings).toFixed(2)}
+                                    <Text style={styles.cell}>{key}</Text>
+                                    <Text style={[styles.cell, { textAlign: 'right' }]}>
+                                        {((product.product.nutriments[RAW_API_LABELS[index]] || 0) * servings).toFixed(2)}
                                     </Text>
                                 </View>
                             ))}
                         </View>
-                    </ScrollView>
+                    </ScrollView> 
+                    <ActionButton icon={<FontAwesome6 name="plus" size={20} color="white" />} text='Add' onPress={handleConfirm} />
                 </>
             ) : (
-                <Text style={styles.text}>Loading...</Text>
+                <ActivityIndicator color="black" style={{ justifyContent: 'center', position: 'absolute' }}/>
             )}
-            <View style={styles.buttonContainer}>
-                <Button title="Cancel" onPress={handleCancel} />
-                <Button title="Confirm" onPress={handleConfirm} />
-            </View>
-        </View>
+            
+        </SafeAreaView>
     );
 }
 
@@ -123,8 +111,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        justifyContent: 'flex-start',
-        alignItems: 'center',
     },
     scrollView: {
         flex: 1,
@@ -141,16 +127,14 @@ const styles = StyleSheet.create({
         marginVertical: 5,
     },
     title: {
-        fontSize: 24,
-        marginTop: 100,
-        textAlign: 'center',
+        fontSize:32
     },
     table: {
         width: '100%',
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5,
-        padding: 10,
+        padding: 32,
     },
     row: {
         flexDirection: 'row',
