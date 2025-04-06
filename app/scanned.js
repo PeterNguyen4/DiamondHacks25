@@ -17,8 +17,6 @@ export default function Scanned() {
             try {
                 const response = await axios.get(`http://${macAddress}:3001/api/${data}`);
                 const jsonVer = response.data; 
-                console.log("Success", jsonVer);
-                console.log('name', jsonVer.product.product_name); // Access JSON properties directly
                 setProduct(jsonVer); // Update state with API result
             } catch (error) {
                 console.error("Error sending data:", error);

@@ -58,7 +58,6 @@ app.get('/api/totals', async (req, res) => {
         // Fetch the names and serving sizes of all products
 
         const totals = {};
-        console.log(products)
         // Sum nutrition facts across all products
         products.forEach(product => {
             const productNutrition = product.nutriments;
@@ -95,6 +94,20 @@ app.get('/api/:productID', async (req, res) => {
     } catch (error) {
         console.error('Error querying the API:', error.message);
         res.status(500).json({ error: 'Failed to fetch data from the API' });
+    }
+});
+
+app.delete('/api/:productID', async (req, res) => {
+    try {
+        const productID = req.params.productID; // Extract productID from request parameters
+        const result = await Product.deleteOne({ _id: productID }); // Delete product by ID
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(200).json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting product:', error.message);
+        res.status(500).json({ error: 'Failed to delete product from database' });
     }
 });
 
