@@ -1,8 +1,11 @@
+
 import { SafeAreaView, StyleSheet, Text, View,ScrollView, ActivityIndicator } from 'react-native'
 import { useState, useEffect } from 'react'
 import axios from 'axios';
 import ActionButton from '../../components/ActionButton';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function Profile() {
     const [totals, setTotals] = useState(null);
@@ -73,7 +76,7 @@ export default function Profile() {
         </SafeAreaView>
     );
 }
-  
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,

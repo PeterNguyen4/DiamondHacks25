@@ -140,6 +140,18 @@ app.post('/api/genai', async (req, res) => {
     } catch (error) {
         console.error('Error querying the GenAI API:', error.message);
         res.status(500).json({ error: 'Failed to fetch data from the GenAI API' });
+
+app.delete('/api/:productID', async (req, res) => {
+    try {
+        const productID = req.params.productID; // Extract productID from request parameters
+        const result = await Product.deleteOne({ _id: productID }); // Delete product by ID
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(200).json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting product:', error.message);
+        res.status(500).json({ error: 'Failed to delete product from database' });
     }
 });
 

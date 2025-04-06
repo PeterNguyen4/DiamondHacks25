@@ -1,7 +1,9 @@
-import { SafeAreaView, StyleSheet, Text, View, FlatList } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, FlatLists, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import { useState, useEffect } from 'react';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icons
 
 export default function Home() {
   const [products, setProducts] = useState(null);
@@ -15,6 +17,20 @@ export default function Home() {
       .then(data => setProducts(data))
       .catch(error => console.error('Error fetching recipes:', error));
   }, []);
+
+  const deleteProduct = (id) => {
+    fetch(`http://${macAddress}:3001/api/${id}`, {
+      method: 'DELETE',
+    })
+      .then(response => {
+        if (response.ok) {
+          setProducts(products.filter(product => product._id !== id));
+        } else {
+          console.error('Failed to delete product');
+        }
+      })
+      .catch(error => console.error('Error deleting product:', error));
+  };
 
   const renderProducts = ({ item }) => (
     <View style={styles.productBox}>
@@ -32,12 +48,19 @@ export default function Home() {
           <FontAwesome6 name="weight-hanging" size={16} color="#5E5E5E" />
           <Text style={styles.productServing}>Serving Size: {item.serving_quantity} {item.serving_quantity_unit}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => deleteProduct(item._id)}
+        >
+          <Icon name="trash" size={20} color='#d3d3d3'/> 
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Daily</Text>
       <FlatList
         data={products}
         keyExtractor={(item, index) => index.toString()}
@@ -58,6 +81,7 @@ const styles = StyleSheet.create({
   productBox: {
     backgroundColor: '#fff',
     padding: 20,
+    paddingRight: 48, // Add extra right padding to avoid overlap with the delete button
     marginVertical: 8,
     borderRadius: 24,
     width: '100%',
@@ -66,6 +90,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    position: 'relative', // Enable absolute positioning for child elements
   },
   productName: {
     fontSize: 20,
@@ -76,5 +101,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#5E5E5E',
     marginLeft: 8,
+  },    
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginTop: 30,
+    textAlign: 'center',
+    paddingBottom:20
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: '50%', // Center vertically relative to the productBox
+    right: 16,
+    transform: [{ translateY: -10 }], // Adjust for proper vertical alignment
+    padding: 8, // Adjusted padding for the icon
+    borderRadius: 20, // Circular button
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
