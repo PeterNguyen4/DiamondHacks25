@@ -29,6 +29,31 @@ export default function Scanned() {
         sendData(sharedData); // Trigger API call when component mounts
     }, [sharedData]); 
 
+    const handleConfirm = async () => {
+        try {
+            const dataToSave = {
+                product_name: product.product.product_name,
+                servings: servings,
+                serving_quantity: product.product.serving_quantity,
+                serving_quantity_unit:product.product.serving_quantity_unit,
+                nutriments: Object.keys(product.product.nutriments).reduce((acc, key) => {
+                    acc[key] = (product.product.nutriments[key] || 0) * servings;
+                    return acc;
+                }, {}),
+            };
+
+            await axios.post(`http://${macAddress}:3001/api/product`, dataToSave);
+            router.push('/home');
+        } catch (error) {
+            console.error("Error saving data:", error);
+            Alert.alert("Error", "Failed to save data to the server");
+        }
+    };
+
+    const handleCancel = async () => {
+        router.push('/home')
+    }
+
     return (
         <View style={styles.container}>
             {product ? (
@@ -89,8 +114,8 @@ export default function Scanned() {
                 <Text style={styles.text}>Loading...</Text>
             )}
             <View style={styles.buttonContainer}>
-                <Button title="Cancel" onPress={() => router.push('/home')} />
-                <Button title="Confirm" onPress={() => router.push('/home')} />
+                <Button title="Cancel" onPress={handleCancel} />
+                <Button title="Confirm" onPress={handleConfirm} />
             </View>
         </View>
     );
