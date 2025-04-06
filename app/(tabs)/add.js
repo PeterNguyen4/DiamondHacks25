@@ -43,7 +43,7 @@ export default function App() {
         <CameraView style={styles.camera} type='back' onBarcodeScanned={async (barcodeData) => {
                 if (barcodeData && !scannerState.current) {
                     scannerState.current = true;
-                    console.log('!!!BARCODE ID:', barcodeData.data);
+                    // console.log('!!!BARCODE ID:', barcodeData.data);
                     setSharedData(barcodeData.data); // Store data in context
                     router.push('../scanned'); // Navigate to the scanned route
                 }

@@ -1,10 +1,9 @@
 
-import { SafeAreaView, StyleSheet, Text, View,ScrollView, ActivityIndicator } from 'react-native'
-import { useState, useEffect } from 'react'
+import { SafeAreaView, StyleSheet, Text, View,ScrollView, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import ActionButton from '../../components/ActionButton';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function Profile() {
@@ -113,7 +112,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5,
-        padding: 32,
+        padding: 20,
     },
     row: {
         flexDirection: 'row',

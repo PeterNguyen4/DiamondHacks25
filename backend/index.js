@@ -140,6 +140,8 @@ app.post('/api/genai', async (req, res) => {
     } catch (error) {
         console.error('Error querying the GenAI API:', error.message);
         res.status(500).json({ error: 'Failed to fetch data from the GenAI API' });
+    }
+});
 
 app.delete('/api/:productID', async (req, res) => {
     try {
